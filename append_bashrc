@@ -1,0 +1,20 @@
+getFanSpeed() {
+	max_fan_speed=255
+	current_speed=$(echo $(cat /sys/devices/pwm-fan/target_pwm)/"${max_fan_speed}"*100 | bc -l)
+	echo "Current fan speed: ${current_speed}"
+}
+
+setFanSpeed() {
+	getFanSpeed
+	max_fan_speed=255
+	desired_fan_speed=${1}
+	speed=$(echo "${max_fan_speed} * (${desired_fan_speed}/100.0)" | bc -l)
+	sudo sh -c "echo ${speed} > /sys/devices/pwm-fan/target_pwm"
+	getFanSpeed
+}
+
+# Get the system temps f0.2 precision.
+temp (){
+	paste \
+		<(cat /sys/devices/virtual/thermal/thermal_zone*/type) <(for i in `cat /sys/devices/virtual/thermal/thermal_zone*/temp`; do echo "scale=2;${i}/1000" | bc -l;done) | column -t
+}
